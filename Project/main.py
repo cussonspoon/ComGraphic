@@ -3,100 +3,59 @@ from pygame.locals import *
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
-from objects.spaceship import WireframeShip
-from objects.scenery import FloorGrid
-from objects.asteroid import Asteroid
-from objects.bullet import Bullet      # <--- New Import
 from logic.game_manager import GameManager
+from logic.input import InputHandler
+from logic.level import Level          
 from ui.interface import Interface
 
 def main():
+    # 1. INIT
     pygame.init()
     display = (800, 600)
     pygame.display.set_mode(display, DOUBLEBUF | OPENGL)
     
-    # Hide mouse and grab input
     pygame.mouse.set_visible(False)
     pygame.event.set_grab(True)
     
-    # Camera Setup
+    # Camera
     glMatrixMode(GL_PROJECTION)
     glLoadIdentity()
-    gluPerspective(45, (display[0]/display[1]), 0.1, 100.0) # Increased view distance to 100
+    gluPerspective(45, (display[0]/display[1]), 0.1, 100.0)
     glMatrixMode(GL_MODELVIEW)
     glLoadIdentity()
     
     glClearColor(0.1, 0.1, 0.1, 1.0)
     glEnable(GL_DEPTH_TEST)
     
-    # Objects
-    ship = WireframeShip()
-    floor = FloorGrid()
+    # 2. SETUP MANAGERS
+    # The Level creates and holds all the objects (ship, asteroids, etc)
+    level = Level()
     game_manager = GameManager()
+    input_handler = InputHandler()
     ui = Interface()
     
-    asteroids = []
-    for i in range(15): # Added a few more asteroids
-        asteroids.append(Asteroid())
-
-    bullets = [] # <--- List to hold active bullets
-
     clock = pygame.time.Clock()
     running = True
 
+    # 3. GAME LOOP
     while running:
-        # --- A. EVENTS ---
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:
-                    running = False
-                
-                # SHOOTING (Spacebar)
-                if event.key == pygame.K_SPACE and not game_manager.is_game_over:
-                    # Create bullet at ship's current position
-                    new_bullet = Bullet(ship.x, ship.y, ship.z)
-                    bullets.append(new_bullet)
+        # --- A. INPUT ---
+        # Input handler modifies the 'level' (moving ship, spawning bullets)
+        running = input_handler.process_input(level, game_manager)
 
-        # --- B. UPDATES ---
+        # --- B. LOGIC & PHYSICS ---
         if not game_manager.is_game_over:
-            mouse_dx, mouse_dy = pygame.mouse.get_rel()
-            ship.update(mouse_dx, mouse_dy)
-            floor.update()
-            
-            for a in asteroids:
-                a.update()
-
-            # Update Bullets
-            for b in bullets:
-                b.update()
-            
-            # Remove dead bullets (performance cleanup)
-            bullets = [b for b in bullets if b.alive]
-
-            # Pass bullets to manager for collision checks
-            game_manager.update(ship, asteroids, bullets)
-        
-        else:
-            pygame.event.set_grab(False)
-            pygame.mouse.set_visible(True)
+            # The game manager checks rules using the objects inside 'level'
+            game_manager.update(level.ship, level.asteroids, level.bullets)
 
         # --- C. DRAWING ---
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         glLoadIdentity()
         
-        floor.draw()
-        
-        for a in asteroids:
-            a.draw()
+        # Draw the 3D world (The level handles the order)
+        level.draw()
             
-        for b in bullets:
-            b.draw()
-            
-        if not game_manager.is_game_over:
-            ship.draw()
-            
+        # Draw the 2D UI
         ui.draw(display, game_manager.score, game_manager.lives)
 
         pygame.display.flip()

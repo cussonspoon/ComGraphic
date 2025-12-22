@@ -1,19 +1,18 @@
 from OpenGL.GL import *
 
 class Bullet:
-    def __init__(self, x, y, z):
+    # 1. Added 'color' parameter
+    def __init__(self, x, y, z, color):
         self.x = x
         self.y = y
         self.z = z
-        self.speed = 2.0  # Fast speed
-        self.radius = 0.2 # Hitbox size
-        self.alive = True # False when it hits something or goes off screen
+        self.color = color   # Store the color (r, g, b)
+        self.speed = 2.0
+        self.radius = 0.2
+        self.alive = True
 
     def update(self):
-        # Move forward (into the screen is negative Z)
         self.z -= self.speed
-        
-        # Despawn if it goes too far
         if self.z < -100.0:
             self.alive = False
 
@@ -22,9 +21,11 @@ class Bullet:
         glTranslatef(self.x, self.y, self.z)
         
         glBegin(GL_LINES)
-        glColor3f(1.0, 1.0, 0.0) # Yellow Laser
-        glVertex3f(0, 0, 0)      # Front
-        glVertex3f(0, 0, 2.0)    # Tail (length of bullet)
+        # 2. Use the stored color instead of hardcoded Yellow
+        glColor3f(self.color[0], self.color[1], self.color[2])
+        
+        glVertex3f(0, 0, 0)
+        glVertex3f(0, 0, 2.0)
         glEnd()
         
         glPopMatrix()
