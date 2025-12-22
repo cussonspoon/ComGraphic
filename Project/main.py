@@ -3,9 +3,10 @@ from pygame.locals import *
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
+# --- IMPORTS ---
 from logic.game_manager import GameManager
 from logic.input import InputHandler
-from logic.level import Level          
+from logic.level import Level
 from ui.interface import Interface
 
 def main():
@@ -17,7 +18,7 @@ def main():
     pygame.mouse.set_visible(False)
     pygame.event.set_grab(True)
     
-    # Camera
+    # Projection Setup
     glMatrixMode(GL_PROJECTION)
     glLoadIdentity()
     gluPerspective(45, (display[0]/display[1]), 0.1, 100.0)
@@ -28,7 +29,6 @@ def main():
     glEnable(GL_DEPTH_TEST)
     
     # 2. SETUP MANAGERS
-    # The Level creates and holds all the objects (ship, asteroids, etc)
     level = Level()
     game_manager = GameManager()
     input_handler = InputHandler()
@@ -40,30 +40,37 @@ def main():
     # 3. GAME LOOP
     while running:
         # --- A. INPUT ---
-        # Input handler modifies the 'level' (moving ship, spawning bullets)
         running = input_handler.process_input(level, game_manager)
 
-        # --- B. LOGIC & PHYSICS ---
+        # --- B. LOGIC ---
         if not game_manager.is_game_over:
-            # The game manager checks rules using the objects inside 'level'
-            game_manager.update(level.ship, level.asteroids, level.bullets, level.powerups)
+            # FIX: We now pass 'level.missiles' as the last argument
+            game_manager.update(
+                level.ship, 
+                level.asteroids, 
+                level.bullets, 
+                level.powerups, 
+                level.missiles  # <--- THIS WAS MISSING
+            )
 
         # --- C. DRAWING ---
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         glLoadIdentity()
         
-        # --- TRUE FIRST PERSON CAMERA ---
-        # Eye: At the ship's exact X/Y position. 
-        # Target: Looking straight forward (Z = -100) from that same X/Y.
-        gluLookAt(level.ship.x, level.ship.y, 0,  # Camera Position (Eye)
-                  level.ship.x, level.ship.y, -100.0, # Look At Target
-                  0, 1, 0) # Up Vector
+        # FPS Camera (Locked to Ship)
+        gluLookAt(level.ship.x, level.ship.y, 0,
+                  level.ship.x, level.ship.y, -100.0,
+                  0, 1, 0)
         
-        # Draw the 3D world
+        # Draw World
         level.draw()
             
-        # Draw the 2D UI
-        ui.draw(display, game_manager.score, game_manager.lives)
+        # Draw UI (Score, Lives, Skill Bar)
+        ui.draw(display, 
+                game_manager.score, 
+                game_manager.lives, 
+                level.ship.skill_timer, 
+                level.ship.skill_cooldown_max)
 
         pygame.display.flip()
         clock.tick(60)

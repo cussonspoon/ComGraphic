@@ -22,7 +22,7 @@ class Bullet:
         
         glBegin(GL_LINES)
         # 2. Use the stored color instead of hardcoded Yellow
-        glColor3f(self.color[0], self.color[1], self.color[2])
+        glColor3fv(self.color[:3])
         
         glVertex3f(0, 0, 0)
         glVertex3f(0, 0, 2.0)

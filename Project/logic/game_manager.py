@@ -13,28 +13,46 @@ class GameManager:
         self.last_hit_time = 0
         self.invulnerable_duration = 2.0 
 
-    # 1. UPDATE THIS LINE: Add 'powerups' to the arguments
-    def update(self, ship, asteroids, bullets, powerups):
+    # 1. UPDATE THIS LINE: Add 'powerups' and 'missiles' to the arguments
+    def update(self, ship, asteroids, bullets, powerups, missiles):
         if self.is_game_over:
             return
 
-        # --- A. Bullet vs Asteroid (Your existing code) ---
+        # --- A. CHECK BULLETS (Standard) ---
         for bullet in bullets:
             if not bullet.alive: continue
             
             for asteroid in asteroids:
-                hit = check_sphere_collision(bullet, asteroid, bullet.radius + self.asteroid_radius)
-                
-                if hit:
-                    if bullet.color == asteroid.color:
+                if check_sphere_collision(bullet, asteroid, bullet.radius + self.asteroid_radius):
+                    # Check the 4th value (Flag)
+                    # bullet.color[3] is the flag. 
+                    # Standard bullets are (r,g,b,0), so this is False.
+                    is_rainbow = (len(bullet.color) > 3 and bullet.color[3] == 1)
+                    
+                    # Logic: If Rainbow OR Colors Match -> Destroy
+                    if is_rainbow or bullet.color[:3] == asteroid.color[:3]:
                         bullet.alive = False
                         asteroid.reset()
                         self.score += 10
-                        print(f"MATCH! Score: {self.score}")
                     else:
-                        bullet.alive = False
-                        print("WRONG COLOR!")
-                    break 
+                        bullet.alive = False # Wrong color, just destroy bullet
+                    break
+
+        # --- B. CHECK MISSILES (Special) ---
+        for m in missiles:
+            if not m.alive: continue
+            
+            for a in asteroids:
+                if check_sphere_collision(m, a, m.radius + self.asteroid_radius):
+                    # Missiles are spawned with (r,g,b,1), so they ALWAYS hit.
+                    # We can technically skip the check, but using the flag makes it robust.
+                    is_rainbow = (len(m.color) > 3 and m.color[3] == 1)
+                    
+                    if is_rainbow:
+                        m.alive = False
+                        a.reset()
+                        self.score += 20
+                    break
 
         # --- B. Ship vs Asteroid (Your existing code) ---
         if time.time() - self.last_hit_time > self.invulnerable_duration:

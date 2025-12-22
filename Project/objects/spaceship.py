@@ -29,13 +29,20 @@ class WireframeShip:
         self.green_on = False
         self.blue_on = False
 
+        self.skill_cooldown_max = 600  # 10 seconds (at 60 FPS)
+        self.skill_timer = 0
+
     def get_current_color(self):
         r = 1.0 if self.red_on else 0.0
         g = 1.0 if self.green_on else 0.0
         b = 1.0 if self.blue_on else 0.0
+        
+        # Determine if White (just for fallback visual logic if needed)
         if r == 0 and g == 0 and b == 0:
-            return (1.0, 1.0, 1.0)
-        return (r, g, b)
+            return (1.0, 1.0, 1.0, 0) # Default White, BUT Flag is 0
+            
+        # ALWAYS return 0 for the 4th value (Normal Shot)
+        return (r, g, b, 0)
 
     def update(self, mouse_dx, mouse_dy):
         self.x += mouse_dx * self.sensitivity
@@ -43,6 +50,8 @@ class WireframeShip:
         self.x = max(-10.0, min(10.0, self.x))
         self.y = max(-6.0, min(6.0, self.y))
         self.bank_angle = self.x / 4.0 
+        if self.skill_timer > 0:
+            self.skill_timer -= 1
 
     def draw(self):
         glPushMatrix()

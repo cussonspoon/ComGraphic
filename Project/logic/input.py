@@ -26,6 +26,9 @@ class InputHandler:
                 if event.key == pygame.K_SPACE and not game_manager.is_game_over:
                     level.spawn_bullet()
 
+                if event.key == pygame.K_e:
+                    level.activate_skill()
+
         # 2. Continuous Input (Mouse)
         if not game_manager.is_game_over:
             mouse_dx, mouse_dy = pygame.mouse.get_rel()
