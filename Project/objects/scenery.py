@@ -1,33 +1,26 @@
+import random
 from OpenGL.GL import *
 
-class FloorGrid:
+class Star:
     def __init__(self):
-        self.y_level = -2.0
-        self.scroll_speed = 0.2
-        self.z_offset = 0.0
-        
+        # Spread stars out widely
+        self.x = random.uniform(-20, 20)
+        self.y = random.uniform(-10, 10)
+        self.z = random.uniform(-50, -10)
+        # Parallax speed (background moves slower than foreground)
+        self.speed = 0.05 
+
     def update(self):
-        # Increase offset to simulate forward movement
-        self.z_offset += self.scroll_speed
+        self.z += self.speed
+        # Recycle star if it passes the camera
+        if self.z > 0:
+            self.z = -50
+            self.x = random.uniform(-20, 20)
+            self.y = random.uniform(-10, 10)
 
     def draw(self):
-        glPushMatrix()
-        # Move grid to bottom of screen
-        # The modulus (%) creates the infinite loop effect
-        glTranslatef(0, self.y_level, (self.z_offset % 5.0)) 
-        
-        glBegin(GL_LINES)
-        glColor3f(0.2, 0.2, 0.2) # Dark Grey
-        
-        # Draw vertical lines (Z-axis)
-        for x in range(-20, 21, 2):
-            glVertex3f(x, 0, -50)
-            glVertex3f(x, 0, 10)
-            
-        # Draw horizontal lines (X-axis)
-        for z in range(-50, 10, 5):
-            glVertex3f(-20, 0, z)
-            glVertex3f(20, 0, z)
-            
+        glPointSize(2) # Make the dots visible
+        glBegin(GL_POINTS)
+        glColor3f(1.0, 1.0, 1.0) # White
+        glVertex3f(self.x, self.y, self.z)
         glEnd()
-        glPopMatrix()

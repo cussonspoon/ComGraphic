@@ -46,13 +46,20 @@ def main():
         # --- B. LOGIC & PHYSICS ---
         if not game_manager.is_game_over:
             # The game manager checks rules using the objects inside 'level'
-            game_manager.update(level.ship, level.asteroids, level.bullets)
+            game_manager.update(level.ship, level.asteroids, level.bullets, level.powerups)
 
         # --- C. DRAWING ---
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         glLoadIdentity()
         
-        # Draw the 3D world (The level handles the order)
+        # --- TRUE FIRST PERSON CAMERA ---
+        # Eye: At the ship's exact X/Y position. 
+        # Target: Looking straight forward (Z = -100) from that same X/Y.
+        gluLookAt(level.ship.x, level.ship.y, 0,  # Camera Position (Eye)
+                  level.ship.x, level.ship.y, -100.0, # Look At Target
+                  0, 1, 0) # Up Vector
+        
+        # Draw the 3D world
         level.draw()
             
         # Draw the 2D UI
