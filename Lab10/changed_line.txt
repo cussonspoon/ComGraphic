@@ -1,0 +1,50 @@
+#lab10_2.py
+    # Front face (Z+)
+    glNormal3f(0.0, 0.0, 1.0)
+    glTexCoord2f(0.0, 0.0); glVertex3f(-s, -s,  s)
+    glTexCoord2f(2.0, 0.0); glVertex3f( s, -s,  s)
+    glTexCoord2f(2.0, 2.0); glVertex3f( s,  s,  s)
+    glTexCoord2f(0.0, 2.0); glVertex3f(-s,  s,  s)
+    
+    # Back face (Z-)
+    glNormal3f(0.0, 0.0, -1.0)
+    glTexCoord2f(2.0, 0.0); glVertex3f(-s, -s, -s)
+    glTexCoord2f(2.0, 2.0); glVertex3f(-s,  s, -s)
+    glTexCoord2f(0.0, 2.0); glVertex3f( s,  s, -s)
+    glTexCoord2f(0.0, 0.0); glVertex3f( s, -s, -s)
+    
+    # Top face (Y+)
+    glNormal3f(0.0, 1.0, 0.0)
+    glTexCoord2f(0.0, 2.0); glVertex3f(-s,  s, -s)
+    glTexCoord2f(0.0, 0.0); glVertex3f(-s,  s,  s)
+    glTexCoord2f(2.0, 0.0); glVertex3f( s,  s,  s)
+    glTexCoord2f(2.0, 2.0); glVertex3f( s,  s, -s)
+    
+    # Bottom face (Y-)
+    glNormal3f(0.0, -1.0, 0.0)
+    glTexCoord2f(2.0, 2.0); glVertex3f(-s, -s, -s)
+    glTexCoord2f(0.0, 2.0); glVertex3f( s, -s, -s)
+    glTexCoord2f(0.0, 0.0); glVertex3f( s, -s,  s)
+    glTexCoord2f(2.0, 0.0); glVertex3f(-s, -s,  s)
+    
+    # Right face (X+)
+    glNormal3f(1.0, 0.0, 0.0)
+    glTexCoord2f(2.0, 0.0); glVertex3f( s, -s, -s)
+    glTexCoord2f(2.0, 2.0); glVertex3f( s,  s, -s)
+    glTexCoord2f(0.0, 2.0); glVertex3f( s,  s,  s)
+    glTexCoord2f(0.0, 0.0); glVertex3f( s, -s,  s)
+    
+    # Left face (X-)
+    glNormal3f(-1.0, 0.0, 0.0)
+    glTexCoord2f(0.0, 0.0); glVertex3f(-s, -s, -s)
+    glTexCoord2f(2.0, 0.0); glVertex3f(-s, -s,  s)
+    glTexCoord2f(2.0, 2.0); glVertex3f(-s,  s,  s)
+    glTexCoord2f(0.0, 2.0); glVertex3f(-s,  s, -s)
+
+
+#lab10_3.py
+    glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, (1.0, 1.0, 0.0, 1.0))
+
+#lab10_4.py
+    glMaterialfv(GL_FRONT, GL_SPECULAR, (1.0, 1.0, 1.0, 1.0))
+    glMaterialf(GL_FRONT, GL_SHININESS, 100.0)
