@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>A-Frame WebXR - Advanced Animations & Teleport</title>
+    <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+  </head>
+  <body>
+    <a-scene>
+      <a-assets>
+        <img id="floorTex" src="./floor.jpg" />
+        <img id="marbleTex" src="./mable.png" />
+        <img id="torusTex" src="./texture.png" />
+      </a-assets>
+
+      <a-entity id="cameraRig" position="0 0 0">
+        <a-camera position="0 1.6 0">
+          <a-cursor color="#c1ff31" raycaster="objects: .interactive"></a-cursor>
+        </a-camera>
+      </a-entity>
+
+      <a-sky color="#87CEEB"></a-sky>
+
+      <a-plane
+        class="interactive"
+        position="0 0 0"
+        rotation="-90 0 0"
+        width="30"
+        height="30"
+        src="#floorTex"
+        repeat="15 15"
+        teleport-ground
+      ></a-plane>
+
+      <a-torus
+        class="interactive"
+        position="-3 1.5 -4"
+        radius="0.5"
+        tube="0.2"
+        src="#torusTex"
+        rotating-stoppable="speed: 1000"
+        resize-on-click
+      ></a-torus>
+
+      <a-sphere
+        class="interactive"
+        position="0 1 -5"
+        radius="0.75"
+        color="#EF2D5E"
+        move-forward-backward="distance: 3; speed: 500"
+        resize-on-click
+      ></a-sphere>
+
+      <a-sphere
+        class="interactive"
+        position="3 0.5 -4"
+        radius="0.5"
+        color="#4CC3D9"
+        bouncing="height: 8; speed: 1"
+        resize-on-click
+      ></a-sphere>
+
+      <a-box
+        class="interactive"
+        position="-1.5 1 -2.5"
+        rotation="0 45 0"
+        src="#marbleTex"
+        floating="height: 1; speed: 500"
+        resize-on-click
+      ></a-box>
+
+      <a-cone
+        class="interactive"
+        position="1.5 1 -2.5"
+        radius-bottom="0.5"
+        height="1.5"
+        color="#FFC65D"
+        floating="height: 0.5; speed: 800"
+        rotating-stoppable="speed: -100"
+        resize-on-click
+      ></a-cone>
+
+    </a-scene>
+
+    <script>
+      AFRAME.registerComponent("rotating-stoppable", {
+        schema: { speed: { type: "number", default: 100 } },
+        init: function () {
+          this.isRotating = true;
+          this.el.addEventListener("click", () => {
+            this.isRotating = !this.isRotating; // Toggle rotation state
+          });
+        },
+        tick: function (time, deltaTime) {
+          if (!this.isRotating) return; // Exit if paused
+          
+          let rotation = this.el.getAttribute("rotation");
+          this.el.setAttribute("rotation", {
+            x: rotation.x,
+            y: rotation.y + (deltaTime / 1000) * this.data.speed,
+            z: rotation.z,
+          });
+        },
+      });
+
+      AFRAME.registerComponent("move-forward-backward", {
+        schema: {
+          distance: { type: "number", default: 2 },
+          speed: { type: "number", default: 1000 }
+        },
+        init: function() {
+          this.startZ = this.el.getAttribute("position").z;
+        },
+        tick: function (time, deltaTime) {
+          let pos = this.el.getAttribute("position");
+          let offsetZ = Math.sin(time / this.data.speed) * this.data.distance;
+          this.el.setAttribute("position", { x: pos.x, y: pos.y, z: this.startZ + offsetZ });
+        }
+      });
+
+      AFRAME.registerComponent("bouncing", {
+        schema: { 
+          height: { type: "number", default: 2 },
+          speed: { type: "number", default: 1000 } 
+        },
+        init: function() {
+          this.startY = this.el.getAttribute("position").y;
+        },
+        tick: function (time, deltaTime) {
+          let pos = this.el.getAttribute("position");
+          let offsetY = Math.abs(Math.sin(time / this.data.speed)) * this.data.height;
+          this.el.setAttribute("position", { x: pos.x, y: this.startY + offsetY, z: pos.z });
+        },
+      });
+
+      AFRAME.registerComponent("floating", {
+        schema: {
+          height: { type: "number", default: 0.5 },
+          speed: { type: "number", default: 1000 }
+        },
+        init: function() {
+          this.startY = this.el.getAttribute("position").y;
+        },
+        tick: function (time, deltaTime) {
+          let pos = this.el.getAttribute("position");
+          let offsetY = Math.sin(time / this.data.speed) * this.data.height;
+          this.el.setAttribute("position", { x: pos.x, y: this.startY + offsetY, z: pos.z });
+        }
+      });
+
+      AFRAME.registerComponent("teleport-ground", {
+        init: function () {
+          this.el.addEventListener("click", (e) => {
+            let point = e.detail.intersection.point;
+            
+            let rig = document.querySelector("#cameraRig");
+            rig.setAttribute("position", { x: point.x, y: 0, z: point.z });
+          });
+        }
+      });
+
+      AFRAME.registerComponent("resize-on-click", {
+        init: function () {
+          this.isEnlarged = false;
+          this.baseScale = this.el.getAttribute("scale");
+          this.el.addEventListener("click", () => {
+          this.el.setAttribute("scale", {
+                  x: this.baseScale.x * 1.5,
+                  y: this.baseScale.y * 1.5,
+                  z: this.baseScale.z * 1.5
+            })
+          });
+        }
+      });
+    </script>
+  </body>
+</html>
