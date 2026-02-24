@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <script>
+      let scene, camera, renderer;
+      let spaceship;
+      let moveLeft = false,
+        moveRight = false;
+
+      let isFocused = true;
+
+      function init() {
+        scene = new THREE.Scene();
+        camera = new THREE.PerspectiveCamera(
+          75,
+          window.innerWidth / window.innerHeight,
+          0.1,
+          1000,
+        );
+        renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // Create spaceship
+        let geometry = new THREE.ConeGeometry(0.5, 1, 8);
+        let material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+        spaceship = new THREE.Mesh(geometry, material);
+        spaceship.position.set(0, -4, 0);
+        scene.add(spaceship);
+        camera.position.z = 5;
+        animate();
+      }
+
+      function animate() {
+        requestAnimationFrame(animate);
+        if (!isFocused) return;
+
+        // Move spaceship
+        if (moveLeft && spaceship.position.x > -5) {
+          spaceship.position.x -= 0.1;
+        }
+        if (moveRight && spaceship.position.x < 5) {
+          spaceship.position.x += 0.1;
+        }
+        renderer.render(scene, camera);
+      }
+
+      window.addEventListener("keydown", (event) => {
+        if (event.key === "ArrowLeft") moveLeft = true;
+        if (event.key === "ArrowRight") moveRight = true;
+      });
+
+      window.addEventListener("keyup", (event) => {
+        if (event.key === "ArrowLeft") moveLeft = false;
+        if (event.key === "ArrowRight") moveRight = false;
+      });
+
+      window.addEventListener("blur", () => {
+        isFocused = false;
+      });
+
+      window.addEventListener("focus", () => {
+        isFocused = true;
+      });
+
+      init();
+    </script>
+  </body>
+</html>

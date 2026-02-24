@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+        background-color: black;
+      }
+      canvas {
+        display: block;
+      }
+      #ui {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        color: white;
+        font-family: Arial, sans-serif;
+        font-size: 24px;
+        font-weight: bold;
+        z-index: 10;
+        user-select: none;
+      }
+      #gameOver {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: #ff3333;
+        font-family: Arial, sans-serif;
+        font-size: 48px;
+        font-weight: bold;
+        display: none;
+        z-index: 10;
+        user-select: none;
+        text-shadow: 2px 2px 4px #000000;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="ui">Lives: <span id="livesText">3</span></div>
+    <div id="gameOver">GAME OVER</div>
+
+    <script>
+      let scene, camera, renderer;
+      let spaceship;
+      let moveLeft = false, moveRight = false;
+      let isFocused = true;
+      
+      let bullets = [];
+      let asteroids = [];
+      let lives = 3;
+      let isGameOver = false;
+
+      function init() {
+        scene = new THREE.Scene();
+        camera = new THREE.PerspectiveCamera(
+          75,
+          window.innerWidth / window.innerHeight,
+          0.1,
+          1000,
+        );
+        renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // Create spaceship
+        let geometry = new THREE.ConeGeometry(0.5, 1, 8);
+        let material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+        spaceship = new THREE.Mesh(geometry, material);
+        spaceship.position.set(0, -4, 0);
+        scene.add(spaceship);
+        camera.position.z = 5;
+
+        spawnAsteroids();
+        animate();
+      }
+
+      function shootBullet() {
+        if (isGameOver) return;
+        
+        let bulletGeometry = new THREE.CylinderGeometry(0.1, 0.1, 1, 8);
+        let bulletMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00 });
+        let bullet = new THREE.Mesh(bulletGeometry, bulletMaterial);
+        bullet.position.set(spaceship.position.x, spaceship.position.y + 0.5, 0);
+        scene.add(bullet);
+        bullets.push(bullet);
+      }
+
+      function spawnAsteroids() {
+        setInterval(() => {
+          if (isGameOver || !isFocused) return;
+          
+          let asteroidGeometry = new THREE.SphereGeometry(0.5, 8, 8);
+          let asteroidMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+          let asteroid = new THREE.Mesh(asteroidGeometry, asteroidMaterial);
+          
+          asteroid.position.set((Math.random() - 0.5) * 10, 5, 0);
+          
+          scene.add(asteroid);
+          asteroids.push(asteroid);
+        }, 1000);
+      }
+
+      function updateLives() {
+        lives--;
+        document.getElementById("livesText").innerText = lives;
+        
+        if (lives <= 0) {
+          isGameOver = true;
+          document.getElementById("gameOver").style.display = "block";
+        }
+      }
+
+      function animate() {
+        if (isGameOver) return;
+        requestAnimationFrame(animate);
+        if (!isFocused) return;
+
+        if (moveLeft && spaceship.position.x > -5) spaceship.position.x -= 0.1;
+        if (moveRight && spaceship.position.x < 5) spaceship.position.x += 0.1;
+
+        for (let i = asteroids.length - 1; i >= 0; i--) {
+          asteroids[i].position.y -= 0.05;
+          
+          if (asteroids[i].position.y < -6) {
+            scene.remove(asteroids[i]);
+            asteroids.splice(i, 1);
+            continue;
+          }
+
+          if (asteroids[i].position.distanceTo(spaceship.position) < 0.8) {
+            scene.remove(asteroids[i]);
+            asteroids.splice(i, 1);
+            updateLives();
+          }
+        }
+
+        for (let i = bullets.length - 1; i >= 0; i--) {
+          bullets[i].position.y += 0.2;
+          let bulletHit = false;
+
+          if (bullets[i].position.y > 6) {
+            scene.remove(bullets[i]);
+            bullets.splice(i, 1);
+            continue;
+          }
+
+          for (let j = asteroids.length - 1; j >= 0; j--) {
+            if (bullets[i].position.distanceTo(asteroids[j].position) < 0.5) {
+              scene.remove(asteroids[j]);
+              scene.remove(bullets[i]);
+              asteroids.splice(j, 1);
+              bulletHit = true;
+              break; 
+            }
+          }
+
+          if (bulletHit) {
+            bullets.splice(i, 1);
+          }
+        }
+
+        renderer.render(scene, camera);
+      }
+      
+      function refresh() {
+        if (isGameOver){ 
+         isGameOver = false;
+         document.getElementById("gameOver").style.display = "none";
+         lives = 3;
+         document.getElementById("livesText").innerText = lives;
+         animate();
+        }
+      }
+
+      // Event Listeners
+      window.addEventListener("keydown", (event) => {
+        if (event.code === "ArrowLeft") moveLeft = true;
+        if (event.code === "ArrowRight") moveRight = true;
+        if (event.code === "Space") shootBullet();
+        if (event.code === "Space") refresh();
+      });
+
+      window.addEventListener("keyup", (event) => {
+        if (event.code === "ArrowLeft") moveLeft = false;
+        if (event.code === "ArrowRight") moveRight = false;
+      });
+
+      window.addEventListener("blur", () => isFocused = false);
+      window.addEventListener("focus", () => isFocused = true);
+
+      window.addEventListener("resize", () => {
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+      });
+
+      init();
+    </script>
+  </body>
+</html>
